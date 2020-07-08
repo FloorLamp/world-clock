@@ -7,26 +7,35 @@ const TIMEZONES = Array.from(Object.keys(tzdata.zones)).sort();
 
 class TimezoneSelector extends Component {
   static propTypes = {
-    defaultValue: PropTypes.string,
+    value: PropTypes.string,
+    onChange: PropTypes.func.isRequired,
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      value: props.defaultValue || "",
       isActive: false,
       matches: [],
       hoveredIdx: -1,
       selectedIdx: 0,
-      selected: props.defaultValue || "",
+      searchValue: props.value || "",
     };
   }
 
   onChange = (e) => {
-    const value = e.target.value;
-    const re = new RegExp(value, "ig");
-    const matches = TIMEZONES.filter((tz) => !!tz.match(re));
-    this.setState({ isActive: true, value, matches });
+    const searchValue = e.target.value;
+    let matches = [];
+    if (searchValue) {
+      let re;
+      try {
+        re = new RegExp(searchValue, "ig");
+      } catch (error) {
+        console.error("invalid search input", searchValue);
+        return;
+      }
+      matches = TIMEZONES.filter((tz) => !!tz.match(re));
+    }
+    this.setState({ isActive: true, searchValue, matches });
   };
 
   onKeyDown = (e) => {
@@ -55,27 +64,34 @@ class TimezoneSelector extends Component {
   };
 
   onSelect = (value) => {
-    this.setState({ value, selected: value, isActive: false });
+    this.setState({ searchValue: value, isActive: false });
+    this.props.onChange(value);
   };
 
   render() {
-    const { isActive, value, matches, hoveredIdx, selectedIdx } = this.state;
+    const {
+      isActive,
+      searchValue,
+      matches,
+      hoveredIdx,
+      selectedIdx,
+    } = this.state;
     return (
-      <div className="relative">
+      <div className="relative mb-4">
         <label className="block uppercase text-gray-700 font-bold text-xs mb-2">
           Location
         </label>
         <input
           type="text"
-          className="w-full border border-transparent rounded px-4 py-3 text-lg focus:outline-none focus:border-gray-600 focus:shadow mb-4"
+          className="w-full border border-transparent rounded px-4 py-3 text-lg focus:outline-none focus:border-gray-600 hover:border-gray-600 focus:shadow"
           placeholder="Enter a location..."
-          value={value}
+          value={searchValue}
           onChange={this.onChange}
           onKeyDown={this.onKeyDown}
         />
         <div
           className={classNames(
-            "absolute bg-white h-40 max-w-md w-full overflow-y-scroll border border-gray-600",
+            "absolute z-10 bg-white h-40 max-w-md w-full overflow-y-scroll border border-gray-600",
             {
               block: isActive,
               hidden: !isActive,
