@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 
 const displayMinutes = (n) => {
@@ -7,30 +7,17 @@ const displayMinutes = (n) => {
 };
 
 const getHourClasses = (hour) => {
-  if (hour < 6 || hour > 19) {
-    return "bg-purple-800 text-white";
-  } else if (hour === 6 || hour === 19) {
-    return "bg-orange-300";
-  } else return "bg-yellow-100";
+  if (hour < 7 || hour > 20) {
+    return "bg-gray-400";
+  } else return "bg-white";
 };
 
-const TimeTable = ({ offset, selected, onChange, onHover }) => {
-  const [hoverY, setHoverY] = useState(-1);
+const TimeTable = ({ offset, onChange }) => {
   const startingHour = Math.floor(offset / 60);
   const minutes = displayMinutes(((offset % 60) + 60) % 60);
 
   return (
-    <div
-      className="text-sm border border-gray-400 select-none cursor-pointer relative"
-      onMouseMove={(e) => {
-        setHoverY(e.clientY - e.currentTarget.getBoundingClientRect().top);
-      }}
-      onMouseOut={(e) => setHoverY(-1)}
-    >
-      <div
-        className="absolute w-full border-b border-gray-400 pointer-events-none"
-        style={{ top: hoverY }}
-      ></div>
+    <div className="w-full text-sm border border-gray-500 select-none cursor-pointer">
       {Array.from({ length: 24 }).map((_, i) => {
         const hour = (startingHour + i + 24) % 24;
         const time = `${hour}:${minutes}`;
@@ -52,8 +39,6 @@ TimeTable.defaultProps = { offset: 0 };
 
 TimeTable.propTypes = {
   offset: PropTypes.number,
-  onHover: PropTypes.func,
-  selected: PropTypes.string,
   onChange: PropTypes.func.isRequired,
 };
 
