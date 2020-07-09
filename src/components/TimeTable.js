@@ -6,6 +6,14 @@ const displayMinutes = (n) => {
   return str.length === 1 ? "0" + str : str;
 };
 
+const getHourClasses = (hour) => {
+  if (hour < 6 || hour > 19) {
+    return "bg-purple-800 text-white";
+  } else if (hour === 6 || hour === 19) {
+    return "bg-orange-300";
+  } else return "bg-yellow-100";
+};
+
 const TimeTable = ({ offset, selected, onChange, onHover }) => {
   const [hoverY, setHoverY] = useState(-1);
   const startingHour = Math.floor(offset / 60);
@@ -13,7 +21,7 @@ const TimeTable = ({ offset, selected, onChange, onHover }) => {
 
   return (
     <div
-      className="text-sm border border-gray-400 divide-y divide-gray-200 select-none cursor-pointer relative"
+      className="text-sm border border-gray-400 select-none cursor-pointer relative"
       onMouseMove={(e) => {
         setHoverY(e.clientY - e.currentTarget.getBoundingClientRect().top);
       }}
@@ -27,7 +35,11 @@ const TimeTable = ({ offset, selected, onChange, onHover }) => {
         const hour = (startingHour + i + 24) % 24;
         const time = `${hour}:${minutes}`;
         return (
-          <div key={hour} className="px-1" onClick={(e) => onChange(time)}>
+          <div
+            key={hour}
+            className={"px-1 " + getHourClasses(hour)}
+            onClick={(e) => onChange(time)}
+          >
             <div className="w-12 text-right">{time}</div>
           </div>
         );
