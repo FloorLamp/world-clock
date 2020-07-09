@@ -64,8 +64,12 @@ class TimezoneSelector extends Component {
   };
 
   onSelect = (value) => {
-    this.setState({ searchValue: value, isActive: false });
-    this.props.onChange(value);
+    let realValue = value;
+    if (typeof tzdata.zones[value] === "string") {
+      realValue = tzdata.zones[value];
+    }
+    this.setState({ searchValue: realValue, isActive: false });
+    this.props.onChange(realValue);
   };
 
   render() {

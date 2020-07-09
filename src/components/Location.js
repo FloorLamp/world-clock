@@ -4,18 +4,18 @@ import PropTypes from "prop-types";
 import Timetable from "./TimeTable";
 import TimezoneSelector from "./TimezoneSelector";
 
-const Location = ({ value, setTime, setLocation }) => {
+const Location = ({ value, offset, setTime, setLocation }) => {
   return (
     <div className="max-w-xs">
       <TimezoneSelector value={value} onChange={setLocation} />
-      <Timetable onChange={setTime} />
+      {!!value && <Timetable onChange={setTime} offset={offset} />}
     </div>
   );
 };
 
 Location.propTypes = {
-  defaultValue: PropTypes.string,
   value: PropTypes.string,
+  offset: PropTypes.number,
   setLocation: PropTypes.func.isRequired,
   setTime: PropTypes.func.isRequired,
 };

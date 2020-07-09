@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { DateTime } from "luxon";
+import { DateTime, IANAZone } from "luxon";
 
 import Location from "../components/Location";
 
@@ -18,7 +18,8 @@ export class App extends Component {
       .concat([value])
       .concat(this.state.locations.slice(idx + 1));
     this.setState({ locations });
-    console.log(idx, value, locations);
+    const zone = new IANAZone(value);
+    console.log(idx, value, locations, zone);
   };
 
   setTime = (locIdx, time) => {
@@ -27,6 +28,7 @@ export class App extends Component {
 
   render() {
     const { locations } = this.state;
+    const baseOffset = DateTime.local().setZone(locations[0]).offset;
     const len = locations.length;
 
     return (
@@ -36,14 +38,19 @@ export class App extends Component {
             <h1 className="text-4xl">World Clock</h1>
           </header>
           <main className="flex p-4">
-            {locations.map((value, idx) => (
-              <Location
-                key={idx}
-                setLocation={this.setLocation.bind(this, idx)}
-                setTime={this.setTime.bind(this, idx)}
-                value={value}
-              />
-            ))}
+            {locations.map((value, idx) => {
+              const relativeOffset =
+                DateTime.local().setZone(value).offset - baseOffset;
+              return (
+                <Location
+                  key={idx}
+                  setLocation={this.setLocation.bind(this, idx)}
+                  setTime={this.setTime.bind(this, idx)}
+                  value={value}
+                  offset={relativeOffset}
+                />
+              );
+            })}
             {len === 1 && (
               <Location
                 setLocation={this.setLocation.bind(this, len)}
