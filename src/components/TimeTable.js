@@ -12,7 +12,7 @@ const getHourClasses = (hour) => {
   } else return "bg-white";
 };
 
-const TimeTable = ({ offset, onChange }) => {
+const TimeTable = ({ offset, onClick, onMouseMove, onMouseDown }) => {
   const startingHour = Math.floor(offset / 60);
   const minutes = displayMinutes(((offset % 60) + 60) % 60);
 
@@ -25,7 +25,9 @@ const TimeTable = ({ offset, onChange }) => {
           <div
             key={hour}
             className={"px-1 " + getHourClasses(hour)}
-            onClick={(e) => onChange(time)}
+            onClick={(e) => onClick(time, e)}
+            onMouseMove={(e) => onMouseMove(time, e)}
+            onMouseDown={(e) => onMouseDown(time, e)}
           >
             <div className="w-12 text-right">{time}</div>
           </div>
@@ -39,7 +41,9 @@ TimeTable.defaultProps = { offset: 0 };
 
 TimeTable.propTypes = {
   offset: PropTypes.number,
-  onChange: PropTypes.func.isRequired,
+  onClick: PropTypes.func.isRequired,
+  onMouseMove: PropTypes.func.isRequired,
+  onMouseDown: PropTypes.func.isRequired,
 };
 
 export default TimeTable;

@@ -5,7 +5,7 @@ import tzdata from "tzdata";
 
 const TIMEZONES = Array.from(Object.keys(tzdata.zones)).sort();
 
-class TimezoneSelector extends Component {
+class LocationSearch extends Component {
   static propTypes = {
     onChange: PropTypes.func.isRequired,
   };
@@ -127,4 +127,4 @@ class TimezoneSelector extends Component {
   }
 }
 
-export default TimezoneSelector;
+export default LocationSearch;

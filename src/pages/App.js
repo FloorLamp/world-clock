@@ -12,6 +12,10 @@ export class App extends Component {
     this.state = {
       yAxis: -1,
       locations: [DateTime.local().zoneName],
+      blockOriginTop: -1,
+      blockOriginBottom: -1,
+      blockTop: -1,
+      blockBottom: -1,
     };
   }
 
@@ -22,14 +26,44 @@ export class App extends Component {
     console.log(value, locations, zone);
   };
 
-  setTime = (locIdx, time) => {
-    console.log(this.state.locations[locIdx], time);
+  handleTimeTableClick = (tz, time, e) => {
+    this.setState({ blockBottom: this.state.blockOriginBottom });
   };
 
-  handleTimeTableHover = (e) => {
+  handleTimeTableMouseDown = (tz, time, e) => {
+    const parentTop = e.currentTarget.offsetParent.getBoundingClientRect().top;
+    const { bottom, top } = e.currentTarget.getBoundingClientRect();
+    const blockOriginTop = top - parentTop;
+    const blockOriginBottom = bottom - parentTop;
     this.setState({
-      yAxis: e.clientY - e.currentTarget.getBoundingClientRect().top,
+      blockOriginTop,
+      blockOriginBottom,
+      blockTop: blockOriginTop,
+      blockBottom: blockOriginTop,
     });
+    console.log(tz, time);
+  };
+
+  handleTimeTableMouseMove = (tz, time, e) => {
+    const parentTop = e.currentTarget.offsetParent.getBoundingClientRect().top;
+    const { bottom, top } = e.currentTarget.getBoundingClientRect();
+    const yAxis = e.clientY - parentTop;
+    const state = {
+      yAxis,
+    };
+
+    // left mouse button is down - dragging a block
+    if (e.buttons === 1) {
+      const { blockOriginTop, blockOriginBottom } = this.state;
+      if (yAxis >= blockOriginTop) {
+        state.blockTop = blockOriginTop;
+        state.blockBottom = bottom - parentTop;
+      } else {
+        state.blockBottom = blockOriginBottom;
+        state.blockTop = top - parentTop;
+      }
+    }
+    this.setState(state);
   };
 
   handleTimeTableMouseOut = () => {
@@ -37,7 +71,7 @@ export class App extends Component {
   };
 
   render() {
-    const { locations, yAxis } = this.state;
+    const { locations, yAxis, blockTop, blockBottom } = this.state;
     const baseOffset = DateTime.local().setZone(locations[0]).offset;
 
     return (
@@ -59,16 +93,8 @@ export class App extends Component {
             </div>
             <div
               className="flex relative border border-gray-500"
-              onMouseMove={this.handleTimeTableHover}
               onMouseOut={this.handleTimeTableMouseOut}
             >
-              <div
-                className={classNames(
-                  "absolute z-50 w-full border-b border-gray-600 pointer-events-none",
-                  { hidden: yAxis < 0 }
-                )}
-                style={{ top: yAxis }}
-              />
               {locations.map((value, idx) => {
                 const relativeOffset = value
                   ? DateTime.local().setZone(value).offset - baseOffset
@@ -76,11 +102,36 @@ export class App extends Component {
                 return (
                   <TimeTable
                     key={idx}
-                    onChange={this.setTime.bind(this, idx)}
+                    onClick={this.handleTimeTableClick.bind(this, value)}
+                    onMouseMove={this.handleTimeTableMouseMove.bind(
+                      this,
+                      value
+                    )}
+                    onMouseDown={this.handleTimeTableMouseDown.bind(
+                      this,
+                      value
+                    )}
                     offset={relativeOffset}
                   />
                 );
               })}
+              <div
+                className={classNames(
+                  "absolute z-50 w-full border-b border-gray-600 pointer-events-none",
+                  { hidden: yAxis < 0 }
+                )}
+                style={{ top: yAxis }}
+              />
+              <div
+                className={classNames(
+                  "absolute w-full bg-blue-500 bg-opacity-25 pointer-events-none",
+                  { hidden: blockTop < 0 }
+                )}
+                style={{
+                  top: blockTop,
+                  height: `${blockBottom - blockTop}px`,
+                }}
+              />
             </div>
           </main>
         </div>
