@@ -37,9 +37,17 @@ export class App extends Component {
     };
   }
 
-  addLocation = (value) => {
+  handleAddLocation = (value) => {
     const locations = this.state.locations.concat([value]);
     this.setState({ locations });
+  };
+
+  handleRemoveLocation = (idx) => {
+    this.setState({
+      locations: this.state.locations
+        .slice(0, idx)
+        .concat(this.state.locations.slice(idx + 1)),
+    });
   };
 
   handleTimeTableClick = (tz, time, e) => {
@@ -115,67 +123,85 @@ export class App extends Component {
           <header className="bg-blue-300 md:rounded-t-md px-8 py-6 flex justify-between items-center">
             <h1 className="text-4xl">World Clock</h1>
             <div className="w-64">
-              <LocationSearch onChange={this.addLocation} />
+              <LocationSearch onChange={this.handleAddLocation} />
             </div>
           </header>
           <main className="p-4">
-            <div className="flex mb-4">
-              {locations.map((value, idx) => (
-                <div key={idx} className="w-full px-2 truncate">
-                  <h2 className="text-xl">{value}</h2>
-                  {!!blockStartTime && !!blockEndTime && (
-                    <h3>
-                      {formatInterval(
-                        blockStartTime.setZone(value),
-                        blockEndTime.setZone(value)
-                      )}
-                    </h3>
-                  )}
+            {locations.length ? (
+              <>
+                <div className="flex mb-4">
+                  {locations.map((value, idx) => (
+                    <div key={idx} className="w-full px-2 truncate group">
+                      <div className="flex justify-between">
+                        <h2 className="text-xl">{value}</h2>
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none"
+                          onClick={this.handleRemoveLocation.bind(this, idx)}
+                        >
+                          x
+                        </button>
+                      </div>
+                      <h3 className="block">
+                        {!!blockStartTime && !!blockEndTime ? (
+                          formatInterval(
+                            blockStartTime.setZone(value),
+                            blockEndTime.setZone(value)
+                          )
+                        ) : (
+                          <>&#8203;</>
+                        )}
+                      </h3>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div
-              className="flex relative border border-gray-500"
-              onMouseOut={this.handleTimeTableMouseOut}
-            >
-              {locations.map((value, idx) => {
-                const thisInterval = interval.mapEndpoints((d) =>
-                  d.setZone(value)
-                );
-                return (
-                  <TimeTable
-                    key={idx}
-                    interval={thisInterval}
-                    onClick={this.handleTimeTableClick.bind(this, value)}
-                    onMouseMove={this.handleTimeTableMouseMove.bind(
-                      this,
-                      value
+                <div
+                  className="flex relative border border-gray-500"
+                  onMouseOut={this.handleTimeTableMouseOut}
+                >
+                  {locations.map((value, idx) => {
+                    const thisInterval = interval.mapEndpoints((d) =>
+                      d.setZone(value)
+                    );
+                    return (
+                      <TimeTable
+                        key={idx}
+                        interval={thisInterval}
+                        onClick={this.handleTimeTableClick.bind(this, value)}
+                        onMouseMove={this.handleTimeTableMouseMove.bind(
+                          this,
+                          value
+                        )}
+                        onMouseDown={this.handleTimeTableMouseDown.bind(
+                          this,
+                          value
+                        )}
+                      />
+                    );
+                  })}
+                  <div
+                    className={classNames(
+                      "absolute z-50 w-full border-b border-gray-600 pointer-events-none",
+                      { hidden: yAxis < 0 }
                     )}
-                    onMouseDown={this.handleTimeTableMouseDown.bind(
-                      this,
-                      value
-                    )}
+                    style={{ top: yAxis }}
                   />
-                );
-              })}
-              <div
-                className={classNames(
-                  "absolute z-50 w-full border-b border-gray-600 pointer-events-none",
-                  { hidden: yAxis < 0 }
-                )}
-                style={{ top: yAxis }}
-              />
-              <div
-                className={classNames(
-                  "absolute w-full bg-blue-500 bg-opacity-25 pointer-events-none",
-                  { hidden: blockTop < 0 }
-                )}
-                style={{
-                  top: blockTop,
-                  height: `${blockBottom - blockTop}px`,
-                }}
-              />
-            </div>
+                  <div
+                    className={classNames(
+                      "absolute w-full bg-blue-500 bg-opacity-25 pointer-events-none",
+                      { hidden: blockTop < 0 }
+                    )}
+                    style={{
+                      top: blockTop,
+                      height: `${blockBottom - blockTop}px`,
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="h-64 flex justify-center items-center">
+                <h2>Add a location to get started</h2>
+              </div>
+            )}
           </main>
         </div>
       </div>
