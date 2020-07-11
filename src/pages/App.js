@@ -26,7 +26,8 @@ export class App extends Component {
     this.state = {
       yAxis: -1,
       locations: [today.zoneName],
-      start: today,
+      viewportStart: today,
+      viewportEnd: today.plus({ hours: 48 }),
       blockOriginTime: null,
       blockStartTime: null,
       blockEndTime: null,
@@ -59,7 +60,9 @@ export class App extends Component {
   };
 
   handleTimeTableMouseDown = (tz, time, e) => {
-    const parentTop = e.currentTarget.offsetParent.getBoundingClientRect().top;
+    const parentTop =
+      e.currentTarget.offsetParent.getBoundingClientRect().top -
+      e.currentTarget.offsetParent.scrollTop;
     const { bottom, top } = e.currentTarget.getBoundingClientRect();
     const blockOriginTop = top - parentTop;
     const blockOriginBottom = bottom - parentTop;
@@ -74,7 +77,9 @@ export class App extends Component {
   };
 
   handleTimeTableMouseMove = (tz, time, e) => {
-    const parentTop = e.currentTarget.offsetParent.getBoundingClientRect().top;
+    const parentTop =
+      e.currentTarget.offsetParent.getBoundingClientRect().top -
+      e.currentTarget.offsetParent.scrollTop;
     const { bottom, top } = e.currentTarget.getBoundingClientRect();
     const yAxis = e.clientY - parentTop;
     const state = {
@@ -105,9 +110,20 @@ export class App extends Component {
     this.setState({ yAxis: -1 });
   };
 
+  handleScroll = ({ target }) => {
+    if (target.scrollTop > target.scrollHeight - target.clientHeight - 50) {
+      const viewportEnd = this.state.viewportEnd.plus({ hours: 24 });
+      console.log("add 24h", viewportEnd.toISO());
+      this.setState({
+        viewportEnd,
+      });
+    }
+  };
+
   render() {
     const {
-      start,
+      viewportStart,
+      viewportEnd,
       locations,
       yAxis,
       blockTop,
@@ -115,12 +131,12 @@ export class App extends Component {
       blockStartTime,
       blockEndTime,
     } = this.state;
-    const interval = Interval.fromDateTimes(start, start.plus({ hours: 24 }));
+    const interval = Interval.fromDateTimes(viewportStart, viewportEnd);
 
     return (
-      <div className="flex justify-center md:pt-8">
-        <div className="w-full md:max-w-6xl shadow-lg md:rounded-md bg-white">
-          <header className="bg-blue-300 md:rounded-t-md px-8 py-6 flex justify-between items-center">
+      <div className="flex justify-center h-auto">
+        <div className="w-full xl:max-w-screen-xl xl:shadow-lg bg-white">
+          <header className="bg-green-300 px-8 py-6 flex justify-between items-center">
             <h1 className="text-4xl">World Clock</h1>
             <div className="w-64">
               <LocationSearch onChange={this.handleAddLocation} />
@@ -131,14 +147,14 @@ export class App extends Component {
               <>
                 <div className="flex mb-4">
                   {locations.map((value, idx) => (
-                    <div key={idx} className="w-full px-2 truncate group">
-                      <div className="flex justify-between">
-                        <h2 className="text-xl">{value}</h2>
+                    <div key={idx} className="w-full pl-2 truncate group">
+                      <div className="relative justify-between">
+                        <h2 className="text-xl max-w-full">{value}</h2>
                         <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none"
+                          className="absolute inset-y-0 right-0 bg-white rounded-full px-2 text-red-700 font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 focus:outline-none"
                           onClick={this.handleRemoveLocation.bind(this, idx)}
                         >
-                          x
+                          &times;
                         </button>
                       </div>
                       <h3 className="block">
@@ -155,8 +171,10 @@ export class App extends Component {
                   ))}
                 </div>
                 <div
-                  className="flex relative border border-gray-500"
+                  className="flex relative border border-gray-500 overflow-y-scroll"
+                  style={{ maxHeight: "557px" }}
                   onMouseOut={this.handleTimeTableMouseOut}
+                  onScroll={this.handleScroll}
                 >
                   {locations.map((value, idx) => {
                     const thisInterval = interval.mapEndpoints((d) =>
@@ -180,7 +198,7 @@ export class App extends Component {
                   })}
                   <div
                     className={classNames(
-                      "absolute z-50 w-full border-b border-gray-600 pointer-events-none",
+                      "absolute z-50 w-full border-b border-gray-400 pointer-events-none",
                       { hidden: yAxis < 0 }
                     )}
                     style={{ top: yAxis }}
