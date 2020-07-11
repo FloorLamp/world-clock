@@ -10,18 +10,26 @@ const getTimeClasses = (time) => {
 };
 
 const TimeTable = ({ interval, onClick, onMouseMove, onMouseDown }) => {
-  const chunks = interval.splitBy({ hours: 1 }).map((i) => i.start);
+  const hours = interval.splitBy({ hours: 1 }).map((i) => i.start);
 
   return (
     <div className="w-full h-full text-sm font-medium border border-gray-400 select-none cursor-pointer">
-      {chunks.map((d, idx) => {
-        const time = d.toFormat("HH:mm");
-        const day = d.toLocaleString({
+      {hours.map((curr, idx) => {
+        const time = curr.toFormat("HH:mm");
+        const day = curr.toLocaleString({
           weekday: "short",
           month: "long",
           day: "2-digit",
         });
-        const isDayBoundary = d.hour === 0;
+        const isDayBoundary = curr.hour === 0;
+
+        let dstBoundary = null;
+        if (idx > 0) {
+          const prev = hours[idx - 1];
+          if (curr.isInDST !== prev.isInDST) {
+            dstBoundary = curr.isInDST;
+          }
+        }
 
         return (
           <div
@@ -31,13 +39,24 @@ const TimeTable = ({ interval, onClick, onMouseMove, onMouseDown }) => {
               getTimeClasses(time),
               { "border-t": isDayBoundary, "border-gray-400": isDayBoundary }
             )}
-            onClick={(e) => onClick(d, e)}
-            onMouseMove={(e) => onMouseMove(d, e)}
-            onMouseDown={(e) => onMouseDown(d, e)}
+            onClick={(e) => onClick(curr, e)}
+            onMouseMove={(e) => onMouseMove(curr, e)}
+            onMouseDown={(e) => onMouseDown(curr, e)}
           >
-            <div className="w-12 text-right text-gray-900">{time}</div>
+            <div
+              className={classNames("w-12 text-right text-gray-900", {
+                "text-red-700": dstBoundary != null,
+              })}
+            >
+              {time}
+            </div>
             {isDayBoundary && (
               <div className="ml-2 text-gray-600 uppercase text-xs">{day}</div>
+            )}
+            {dstBoundary != null && (
+              <div className="ml-2 text-red-600 uppercase text-xs">
+                {dstBoundary ? "DST Starts" : "DST Ends"}
+              </div>
             )}
           </div>
         );
